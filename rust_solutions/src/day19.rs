@@ -51,10 +51,11 @@ fn is_valid_towel_pattern(
     }
 
     let mut curr_idx = 1;
-    let mut word_slice = &pattern[..curr_idx];
+    let mut word_slice: &str;
     let mut is_valid = false;
 
-    while !word_slice.is_empty() {
+    while curr_idx <= pattern.len() {
+        word_slice = &pattern[..curr_idx];
         if towel_patterns.contains(word_slice) {
             if word_slice.len() == pattern.len() {
                 return true;
@@ -67,10 +68,6 @@ fn is_valid_towel_pattern(
             }
         }
         curr_idx += 1;
-        if curr_idx > pattern.len() {
-            break;
-        }
-        word_slice = &pattern[..curr_idx];
     }
 
     is_valid
