@@ -73,13 +73,8 @@ fn is_valid_towel_pattern(
     is_valid
 }
 
-pub fn sol2() {
-    let mut filename = utils::read_filename_from_input();
-    if String::is_empty(&filename) {
-        filename = String::from("example_inputs/day19.txt");
-    }
-    let contents = fs::read_to_string(&filename).expect("Failed to read file contents");
-    let contents: Vec<&str> = contents.lines().collect();
+pub fn sol2(input: &String) {
+    let contents: Vec<&str> = input.lines().collect();
 
     let towel_patterns: HashSet<&str> = match contents.get(0) {
         Some(patterns) => patterns.split(",").map(|word| word.trim()).collect(),
@@ -90,7 +85,6 @@ pub fn sol2() {
     let mut memo: HashMap<String, usize> = HashMap::new();
     let count = required_patterns.iter().fold(0, |acc, pattern: &&str| {
         let num = num_valid_towel_patterns(&towel_patterns, pattern, &mut memo);
-        //println!("{num}");
         acc + num
     });
     println!("num valid: {count}");
