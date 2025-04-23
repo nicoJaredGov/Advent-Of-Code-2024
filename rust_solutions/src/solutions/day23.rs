@@ -4,36 +4,23 @@ use crate::utils;
 
 pub fn sol(input: &str) {
     let graph = utils::build_undirected_graph(input);
+    let mut cliques: HashSet<Vec<&str>> = HashSet::new();
 
-    let mut cliques: Vec<HashSet<&str>> = vec![];
     for (computer, adjacency_set) in graph.iter() {
-        if adjacency_set.len() < 2 {
+        if adjacency_set.len() < 2 || !computer.starts_with('t') {
             continue;
         }
 
-        let computer_starts_with_t = computer.starts_with('t');
         for adjacency in adjacency_set {
-            let starts_with_t = adjacency.starts_with('t') || computer_starts_with_t;
-            let intersect = graph
-                .get(adjacency)
-                .unwrap()
-                .intersection(adjacency_set);
-
+            let intersect = graph.get(adjacency).unwrap().intersection(adjacency_set);
             intersect
-                .filter(|x| x.starts_with('t') || starts_with_t)
-                .map(|i| {
-                    let mut l = HashSet::new();
-                    l.insert(*i);
-                    l.insert(*adjacency);
-                    l.insert(*computer);
-                    l
-                })
-                .for_each(|h| {
-                    if !cliques.contains(&h) {
-                        cliques.push(h)
+                .map(|i| vec![*computer, *adjacency, *i])
+                .for_each(|mut clique| {
+                    clique.sort();
+                    if !cliques.contains(&clique) {
+                        cliques.insert(clique);
                     }
                 });
-            //println!("{computer} {adjacency}");
         }
     }
 
