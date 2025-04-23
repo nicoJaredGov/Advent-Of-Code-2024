@@ -1,31 +1,12 @@
-use std::collections::HashMap;
 use std::collections::HashSet;
 
-pub fn sol(input: &String) {
-    let mut adjacency_map: HashMap<&str, HashSet<&str>> = Default::default();
-    let pairs: Vec<Vec<&str>> = input
-        .lines()
-        .map(|line| line.split('-').collect())
-        .collect();
+use crate::utils;
 
-    for pair in pairs {
-        let first_computer = pair.get(0).unwrap();
-        let second_computer = pair.get(1).unwrap();
-
-        let first_adjacency_set = adjacency_map
-            .entry(first_computer)
-            .or_insert(HashSet::new());
-        first_adjacency_set.insert(second_computer);
-
-        let second_adjacency_set = adjacency_map
-            .entry(second_computer)
-            .or_insert(HashSet::new());
-        second_adjacency_set.insert(first_computer);
-    }
-    //println!("{adjacency_map:?}");
+pub fn sol(input: &str) {
+    let graph = utils::build_undirected_graph(input);
 
     let mut cliques: Vec<HashSet<&str>> = vec![];
-    for (computer, adjacency_set) in adjacency_map.iter() {
+    for (computer, adjacency_set) in graph.iter() {
         if adjacency_set.len() < 2 {
             continue;
         }
@@ -33,7 +14,7 @@ pub fn sol(input: &String) {
         let computer_starts_with_t = computer.starts_with('t');
         for adjacency in adjacency_set {
             let starts_with_t = adjacency.starts_with('t') || computer_starts_with_t;
-            let intersect = adjacency_map
+            let intersect = graph
                 .get(adjacency)
                 .unwrap()
                 .intersection(adjacency_set);
