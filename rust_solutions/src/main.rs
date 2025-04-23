@@ -10,8 +10,8 @@ fn main() {
         match fs::read_to_string(arg) {
             Ok(content) => {
                 let before = Instant::now();
-                solutions::day23::sol(&content);
-                println!("Solution time: {} ms", before.elapsed().as_millis());
+                solutions::day23::sol2(&content);
+                println!("\nSolution time: {} ms", before.elapsed().as_millis());
             },
             Err(e) => eprintln!("Failed to read file {arg}: {e}"),
         }

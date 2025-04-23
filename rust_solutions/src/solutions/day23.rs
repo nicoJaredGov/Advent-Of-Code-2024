@@ -27,3 +27,16 @@ pub fn sol(input: &str) {
     let num_cliques = cliques.len();
     println!("{num_cliques}");
 }
+
+pub fn sol2(input: &str) {
+    let graph = utils::build_undirected_graph(input);
+
+    let r: HashSet<&str> = HashSet::new();
+    let p: HashSet<&str> = graph.keys().cloned().collect();
+    let x: HashSet<&str> = HashSet::new();
+    let mut max_clique: Vec<&str> = Vec::new();
+    utils::bron_kerbosch_max_only(r, p, x, &graph, &mut max_clique);
+
+    max_clique.sort();
+    max_clique.iter().for_each(|c| print!("{c},"));
+}

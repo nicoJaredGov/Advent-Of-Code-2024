@@ -86,3 +86,50 @@ pub fn bron_kerbosch<T: Hash + Eq + Clone + Ord>(
         processed_vertices.insert(candidate.clone());
     }
 }
+
+pub fn bron_kerbosch_max_only<T: Hash + Eq + Clone + Ord>(
+    current_clique: HashSet<T>,
+    mut potential_candidates: HashSet<T>,
+    mut processed_vertices: HashSet<T>,
+    graph: &HashMap<T, HashSet<T>>,
+    max_clique: &mut Vec<T>,
+) {
+    if potential_candidates.is_empty() && processed_vertices.is_empty() {
+        if current_clique.len() > 2 && current_clique.len() > max_clique.len() {
+            max_clique.clear();
+            for v in current_clique.iter() {
+                max_clique.push(v.clone());
+            }
+        }
+        return;
+    }
+
+    let pivot = potential_candidates
+        .union(&processed_vertices)
+        .max_by(|x, y| graph.get(x).iter().len().cmp(&graph.get(y).iter().len()))
+        .unwrap();
+
+    let pivot_neighbours = graph.get(pivot).unwrap();
+    let candidates = potential_candidates.clone();
+    let candidates = candidates.difference(pivot_neighbours);
+
+    for candidate in candidates {
+        let mut new_clique = current_clique.clone();
+        new_clique.insert(candidate.clone());
+
+        let candidate_neighbours = graph.get(candidate).unwrap();
+        let new_potential: HashSet<T> = potential_candidates
+            .intersection(candidate_neighbours)
+            .cloned()
+            .collect();
+        let new_processed: HashSet<T> = processed_vertices
+            .intersection(candidate_neighbours)
+            .cloned()
+            .collect();
+
+        bron_kerbosch_max_only(new_clique, new_potential, new_processed, graph, max_clique);
+
+        potential_candidates.remove(candidate);
+        processed_vertices.insert(candidate.clone());
+    }
+}
