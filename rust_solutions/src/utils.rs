@@ -147,3 +147,17 @@ pub fn get_2d_obstacles_set(input: &str) -> HashSet<(i32, i32)> {
         .collect();
     set
 }
+
+pub fn draw_grid(obstacles: &HashSet<(i32, i32)>, width: usize, height: usize) {
+    for row in 0..height {
+        let mut line = String::new();
+        for col in 0..width {
+            if obstacles.contains(&(row as i32, col as i32)) {
+                line.push('#');
+            } else {
+                line.push('.');
+            }
+        }
+        println!("{line}");
+    }
+}
