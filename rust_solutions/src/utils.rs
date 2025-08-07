@@ -133,3 +133,17 @@ pub fn bron_kerbosch_max_only<T: Hash + Eq + Clone + Ord>(
         processed_vertices.insert(candidate.clone());
     }
 }
+
+//get a set of 2d coords from a string input
+pub fn get_2d_obstacles_set(input: &str) -> HashSet<(i32, i32)> {
+    let set: HashSet<(i32, i32)> = input
+        .lines()
+        .map(|line| {
+            let pair = line.split_once(',').unwrap();
+            let first = pair.0.trim().parse::<i32>().unwrap();
+            let second = pair.1.trim().parse::<i32>().unwrap();
+            (first, second)
+        })
+        .collect();
+    set
+}
