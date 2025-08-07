@@ -135,9 +135,10 @@ pub fn bron_kerbosch_max_only<T: Hash + Eq + Clone + Ord>(
 }
 
 //get a set of 2d coords from a string input
-pub fn get_2d_obstacles_set(input: &str) -> HashSet<(i32, i32)> {
+pub fn get_2d_obstacles_set(input: &str, limit: usize) -> HashSet<(i32, i32)> {
     let set: HashSet<(i32, i32)> = input
         .lines()
+        .take(limit)
         .map(|line| {
             let pair = line.split_once(',').unwrap();
             let first = pair.0.trim().parse::<i32>().unwrap();
@@ -152,7 +153,7 @@ pub fn draw_grid(obstacles: &HashSet<(i32, i32)>, width: usize, height: usize) {
     for row in 0..height {
         let mut line = String::new();
         for col in 0..width {
-            if obstacles.contains(&(row as i32, col as i32)) {
+            if obstacles.contains(&(col as i32, row as i32)) {
                 line.push('#');
             } else {
                 line.push('.');
