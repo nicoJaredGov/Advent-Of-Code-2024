@@ -149,11 +149,11 @@ pub fn get_2d_obstacles_set(input: &str, limit: usize) -> HashSet<(i32, i32)> {
     set
 }
 
-pub fn draw_grid(obstacles: &HashSet<(i32, i32)>, width: usize, height: usize) {
+pub fn draw_grid(obstacles: &HashSet<(i32, i32)>, width: i32, height: i32) {
     for row in 0..height {
         let mut line = String::new();
         for col in 0..width {
-            if obstacles.contains(&(col as i32, row as i32)) {
+            if obstacles.contains(&(col, row)) {
                 line.push('#');
             } else {
                 line.push('.');
@@ -161,4 +161,8 @@ pub fn draw_grid(obstacles: &HashSet<(i32, i32)>, width: usize, height: usize) {
         }
         println!("{line}");
     }
+}
+
+pub fn calculate_manhattan(source: &(i32, i32), dest: &(i32, i32)) -> i32 {
+    (dest.0 - source.0).abs() + (dest.1 - source.1).abs()
 }
