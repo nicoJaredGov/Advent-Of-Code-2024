@@ -134,11 +134,10 @@ pub fn bron_kerbosch_max_only<T: Hash + Eq + Clone + Ord>(
     }
 }
 
-//get a set of 2d coords from a string input
-pub fn get_2d_obstacles_set(input: &str, limit: usize) -> HashSet<(i32, i32)> {
+//get a set of 2d coords from a list of string pairs in the form x,y
+pub fn get_2d_obstacles_set(input: &[&str]) -> HashSet<(i32, i32)> {
     let set: HashSet<(i32, i32)> = input
-        .lines()
-        .take(limit)
+        .into_iter()
         .map(|line| {
             let pair = line.split_once(',').unwrap();
             let first = pair.0.trim().parse::<i32>().unwrap();

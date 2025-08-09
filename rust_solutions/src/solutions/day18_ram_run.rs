@@ -10,21 +10,10 @@ pub struct Node {
 
 // returns true if destination is found else false
 pub fn a_star_search(
-    obstacles: &HashSet<(i32, i32)>,
-    grid_dim: (i32, i32),
+    is_valid_position: impl Fn(&(i32, i32)) -> bool,
     start_cell: (i32, i32),
     dest_cell: (i32, i32),
 ) -> bool {
-    let (width, height) = grid_dim;
-
-    let is_valid_position = |pos: &(i32, i32)| -> bool {
-        let is_out_of_bounds = pos.0 < 0 || pos.0 >= width || pos.1 < 0 || pos.1 >= height;
-        if is_out_of_bounds || obstacles.contains(&pos) {
-            return false;
-        }
-        true
-    };
-
     let start = Node {
         cell: start_cell,
         dist: 0,
@@ -64,10 +53,63 @@ pub fn a_star_search(
 }
 
 pub fn sol(input: &str, board_length: i32, limit: usize) {
-    let obstacles = utils::get_2d_obstacles_set(input, limit);
+    let obstacles: Vec<&str> = input.lines().take(limit).collect();
+    let obstacles = utils::get_2d_obstacles_set(&obstacles);
+
     let start = (0, 0);
     let dest = (board_length - 1, board_length - 1);
+
+    let is_valid_position = |pos: &(i32, i32)| -> bool {
+        let is_out_of_bounds =
+            pos.0 < 0 || pos.0 >= board_length || pos.1 < 0 || pos.1 >= board_length;
+        if is_out_of_bounds || obstacles.contains(&pos) {
+            return false;
+        }
+        true
+    };
+
     utils::draw_grid(&obstacles, board_length, board_length);
 
-    a_star_search(&obstacles, (board_length, board_length), start, dest);
+    a_star_search(is_valid_position, start, dest);
+}
+
+// use bisection search to find the first obstacle that prevents reaching the destination
+pub fn sol2(input: &str, board_length: i32, limit: usize) {
+    let start = (0, 0);
+    let dest = (board_length - 1, board_length - 1);
+    let obstacles: Vec<&str> = input.lines().collect();
+    let initial_obstacles = utils::get_2d_obstacles_set(&obstacles[..limit]);
+
+    let is_valid_position = |pos: &(i32, i32), extend_obstacles: &HashSet<(i32, i32)>| -> bool {
+        let is_out_of_bounds =
+            pos.0 < 0 || pos.0 >= board_length || pos.1 < 0 || pos.1 >= board_length;
+        if is_out_of_bounds || initial_obstacles.contains(&pos) || extend_obstacles.contains(&pos) {
+            return false;
+        }
+        true
+    };
+
+    let mut low = limit;
+    let mut high = obstacles.len();
+    let mut mid = low + ((high - low) / 2);
+    while low <= high {
+        let extend_obstacles = utils::get_2d_obstacles_set(&obstacles[limit..mid]);
+
+        let is_valid_position = |pos: &(i32, i32)| is_valid_position(pos, &extend_obstacles);
+        let dest_found = a_star_search(is_valid_position, start, dest);
+
+        match dest_found {
+            true => low = mid,
+            false => high = mid,
+        }
+
+        let new_mid = low + ((high - low) / 2);
+        if new_mid == mid {
+            let blocking_obstacle = obstacles[mid];
+            println!("Blocking obstacle is {blocking_obstacle}.");
+            return;
+        } else {
+            mid = new_mid;
+        }
+    }
 }
