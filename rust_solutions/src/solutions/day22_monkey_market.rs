@@ -30,39 +30,37 @@ pub fn sol(input: &str, num_iters: i64) {
 
 pub fn sol2(input: &str, num_iters: usize) {
     let mut sequence_values: HashMap<(i64, i64, i64, i64), i64> = HashMap::new();
+    let mut seen_sequences: HashSet<(i64, i64, i64, i64)> = HashSet::new();
 
     for line in input.lines() {
         let mut secret: i64 = line.parse().expect("Failed to parse input to integer.");
         let mut prev = secret % 10;
-        let mut price_diffs: Vec<i64> = vec![];
-        let mut seen_sequences: HashSet<(i64, i64, i64, i64)> = HashSet::new();
+        let mut diffs = [0i64; 4];
 
-        // only get the first 3 price diffs
-        for _ in 0..3 {
+        // fill the first 4 price diffs
+        for i in 0..4 {
             secret = next_secret_number(secret);
             let price = secret % 10;
-            price_diffs.push(price - prev);
+            diffs[i] = price - prev;
             prev = price;
         }
 
         // get the rest of the price diffs and update 4-sequence values
-        for i in 3..num_iters {
-            secret = next_secret_number(secret);
-            let price = secret % 10;
-            price_diffs.push(price - prev);
-            prev = price;
-
-            let sequence = (
-                price_diffs[i - 3],
-                price_diffs[i - 2],
-                price_diffs[i - 1],
-                price_diffs[i],
-            );
+        for _ in 4..num_iters + 1 {
+            let sequence = (diffs[0], diffs[1], diffs[2], diffs[3]);
             if !seen_sequences.contains(&sequence) {
-                let value = sequence_values.entry(sequence).or_insert(0);
-                *value += price;
+                *sequence_values.entry(sequence).or_insert(0) += prev;
                 seen_sequences.insert(sequence);
             }
+
+            secret = next_secret_number(secret);
+            let price = secret % 10;
+            // shift diffs left
+            diffs[0] = diffs[1];
+            diffs[1] = diffs[2];
+            diffs[2] = diffs[3];
+            diffs[3] = price - prev;
+            prev = price;
         }
 
         seen_sequences.clear();
@@ -71,6 +69,7 @@ pub fn sol2(input: &str, num_iters: usize) {
     // sort sequence map by highest value to get best sequence
     let mut sequence_vec: Vec<(&(i64, i64, i64, i64), &i64)> = sequence_values.iter().collect();
     sequence_vec.sort_by(|a, b| b.1.cmp(a.1));
-    let best_sequence = sequence_vec.first().unwrap();
-    println!("{best_sequence:?}")
+    if let Some(best_sequence) = sequence_vec.first() {
+        println!("{best_sequence:?}");
+    }
 }
