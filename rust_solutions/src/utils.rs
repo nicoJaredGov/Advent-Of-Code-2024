@@ -13,8 +13,9 @@ pub fn read_filename_from_input() -> String {
     return file_name.trim().to_owned();
 }
 
-//builds a graph in the adjacency list format
-//format of input is a list of lines where each line is a pair of vertices 'a-b' representing an edge between the two
+/// Builds a graph in the form of a dictionary of strings to adjacency sets of strings.
+///
+/// Format of input is a list of lines where each line is a pair of vertices 'a-b' representing an edge between the two.
 pub fn build_graph(input: &str, is_directed: bool) -> HashMap<&str, HashSet<&str>> {
     let mut graph: HashMap<&str, HashSet<&str>> = Default::default();
 
@@ -40,7 +41,7 @@ pub fn build_undirected_graph(input: &str) -> HashMap<&str, HashSet<&str>> {
     build_graph(input, false)
 }
 
-//algorithm for finding all maximal cliques in a graph
+/// Algorithm for finding all maximal cliques in a graph.
 pub fn bron_kerbosch<T: Hash + Eq + Clone + Ord>(
     current_clique: HashSet<T>,
     mut potential_candidates: HashSet<T>,
@@ -134,23 +135,25 @@ pub fn bron_kerbosch_max_only<T: Hash + Eq + Clone + Ord>(
     }
 }
 
-//get a set of 2d coords from a list of string pairs in the form x,y
+/// Returns a set of 2-D coords from a list of string pairs in the form x,y
 pub fn get_2d_obstacles_set(input: &[&str]) -> HashSet<(i32, i32)> {
     let set: HashSet<(i32, i32)> = input
         .into_iter()
         .map(|line| {
             let pair = line.split_once(',').unwrap();
-            let first = pair.0.trim().parse::<i32>().unwrap();
-            let second = pair.1.trim().parse::<i32>().unwrap();
+            let first: i32 = pair.0.trim().parse().unwrap();
+            let second: i32 = pair.1.trim().parse().unwrap();
             (first, second)
         })
         .collect();
+
     set
 }
 
 pub fn draw_grid(obstacles: &HashSet<(i32, i32)>, width: i32, height: i32) {
     for row in 0..height {
         let mut line = String::new();
+
         for col in 0..width {
             if obstacles.contains(&(col, row)) {
                 line.push('#');
@@ -158,6 +161,7 @@ pub fn draw_grid(obstacles: &HashSet<(i32, i32)>, width: i32, height: i32) {
                 line.push('.');
             }
         }
+
         println!("{line}");
     }
 }
