@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::io;
 
+pub const EMPTY_LINE: &'static str = "\r\n\r\n";
+
 pub fn read_filename_from_input() -> String {
     let mut file_name = String::new();
 
