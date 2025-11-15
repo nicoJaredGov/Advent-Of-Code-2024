@@ -1,5 +1,5 @@
 use crate::utils::EMPTY_LINE;
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 #[derive(Debug, Clone, Copy)]
 pub enum LogicGate {
@@ -8,129 +8,124 @@ pub enum LogicGate {
     Xor,
 }
 
-impl LogicGate {
-    fn from_str(input: &str) -> Option<Self> {
+impl FromStr for LogicGate {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
         match input.trim().to_lowercase().as_str() {
-            "and" => Some(LogicGate::And),
-            "or" => Some(LogicGate::Or),
-            "xor" => Some(LogicGate::Xor),
-            _ => None,
+            "and" => Ok(LogicGate::And),
+            "or" => Ok(LogicGate::Or),
+            "xor" => Ok(LogicGate::Xor),
+            _ => Err(()),
         }
     }
 }
 
-pub fn map_str_to_bool(input: &str) -> bool {
-    match input.trim() {
-        "0" => false,
-        "1" => true,
-        _ => false,
-    }
+#[derive(Debug, Clone)]
+struct LogicOperation {
+    gate: LogicGate,
+    lhs: String,
+    rhs: String,
 }
 
-pub fn map_bool_to_char(input: bool) -> char {
-    match input {
-        true => '1',
-        false => '0',
+fn parse_bool(s: &str) -> Option<bool> {
+    match s.trim() {
+        "0" => Some(false),
+        "1" => Some(true),
+        _ => None,
     }
 }
 
 fn get_wire_value(
     wire: &str,
-    operations: &HashMap<&str, (LogicGate, &str, &str)>,
-    wire_values: &mut HashMap<String, bool>,
+    operations: &HashMap<String, LogicOperation>,
+    memo: &mut HashMap<String, bool>,
 ) -> bool {
-    // Return if wire value is memoized
-    if let Some(value) = wire_values.get(wire) {
+    if let Some(value) = memo.get(wire) {
         return *value;
     }
 
-    // Get operation value (recursive if input wires are not memoized)
-    let &(op, wire1, wire2) = operations
+    let op = operations
         .get(wire)
         .expect("Operation for this wire does not exist. Cannot continue.");
 
-    let wire1_value = wire_values.get(wire1);
-    let wire1_value = match wire1_value {
-        Some(&val) => val,
-        None => get_wire_value(wire1, operations, wire_values),
-    };
-
-    let wire2_value = wire_values.get(wire2);
-    let wire2_value = match wire2_value {
-        Some(&val) => val,
-        None => get_wire_value(wire2, operations, wire_values),
-    };
+    let lhs_value = get_wire_value(&op.lhs, operations, memo);
+    let rhs_value = get_wire_value(&op.rhs, operations, memo);
 
     // Perform operation
-    let result = match op {
-        LogicGate::And => wire1_value && wire2_value,
-        LogicGate::Or => wire1_value || wire2_value,
-        LogicGate::Xor => wire1_value ^ wire2_value,
+    let result = match op.gate {
+        LogicGate::And => lhs_value && rhs_value,
+        LogicGate::Or => lhs_value || rhs_value,
+        LogicGate::Xor => lhs_value ^ rhs_value,
     };
 
-    wire_values.insert(wire.to_string(), result);
-
-    return result;
+    memo.insert(wire.to_string(), result);
+    result
 }
 
 pub fn sol(input: &str) {
     let (initial_wires, operations) = input.split_once(EMPTY_LINE).unwrap();
 
-    //println!("{initial_wires:?}");
-    //println!("{operations:?}");
-
-    let mut wire_values: HashMap<String, bool> = initial_wires
+    let mut memo: HashMap<String, bool> = initial_wires
         .lines()
-        .map(|line| {
-            let (k, v) = line.trim().split_once(':').unwrap();
-            let v = map_str_to_bool(v);
-            (k.to_string(), v)
+        .filter_map(|line| {
+            let line = line.trim();
+            if line.is_empty() {
+                return None;
+            }
+
+            let (k, v) = line.split_once(':')?;
+            let v = parse_bool(v)?;
+            Some((k.to_string(), v))
         })
         .collect();
 
-    //println!("{wire_values:?}");
-
-    let operations: HashMap<&str, (LogicGate, &str, &str)> = operations
+    let operations: HashMap<String, LogicOperation> = operations
         .lines()
-        .map(|line| {
-            let args: Vec<&str> = line.trim().split(' ').collect();
+        .filter_map(|line| {
+            let line = line.trim();
+            if line.is_empty() {
+                return None;
+            }
 
-            let out = *args.last().unwrap();
+            let parts: Vec<&str> = line.split_whitespace().collect();
 
-            let op = (
-                LogicGate::from_str(args.get(1).unwrap()).unwrap(),
-                *args.get(0).unwrap(),
-                *args.get(2).unwrap(),
-            );
+            // Expect format: "<lhs> <gate> <rhs> -> <out>"
+            if parts.len() != 5 {
+                return None;
+            }
 
-            (out, op)
+            let gate = match parts[1].parse::<LogicGate>() {
+                Ok(g) => g,
+                Err(_) => return None,
+            };
+
+            let lhs = parts[0].to_string();
+            let rhs = parts[2].to_string();
+            let out = parts[4].to_string();
+
+            Some((out, LogicOperation { gate, lhs, rhs }))
         })
         .collect();
 
-    //println!("{operations:?}");
-
-    let mut output = String::new();
-    let mut count = 0;
+    let mut bits: Vec<char> = Vec::new();
+    let mut count: usize = 0;
     loop {
-        let z_wire;
-        if count < 10 {
-            z_wire = "z0".to_string() + &count.to_string();
-        } else {
-            z_wire = "z".to_string() + &count.to_string();
-        }
+        let z_wire = format!("z{:02}", count);
 
-        if operations.contains_key(z_wire.as_str()) {
-            let value = get_wire_value(&z_wire, &operations, &mut wire_values);
-            output.push(map_bool_to_char(value));
-        } else {
+        if !operations.contains_key(&z_wire) {
             break;
         }
 
+        let value = get_wire_value(&z_wire, &operations, &mut memo);
+        bits.push(if value { '1' } else { '0' });
         count += 1;
     }
 
-    let reversed_output: String = output.chars().rev().collect();
-    let result = i64::from_str_radix(&reversed_output, 2).unwrap();
+    let result = bits
+        .iter()
+        .rev()
+        .fold(0i64, |acc, &c| (acc << 1) | if c == '1' { 1 } else { 0 });
 
     println!("{result}");
 }
